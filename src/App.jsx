@@ -101,6 +101,11 @@ function App() {
   // ======================
   const handleLogin = async () => {
     const errors = {};
+    setUser({
+      ...data.user || data,
+      registeredEvents: data.user?.registeredEvents || data.registeredEvents || [],
+      createdEvents: data.user?.createdEvents || data.createdEvents || [],
+    });
 
     if (!loginForm.email) errors.email = "El correo es obligatorio.";
     else if (!loginForm.email.includes("@")) errors.email = "Correo electrónico inválido.";
@@ -138,6 +143,13 @@ function App() {
   // ==========================
   const handleRegister = async () => {
     const errors = {};
+
+    setUser({
+      ...data.user || data,
+      registeredEvents: [],
+      createdEvents: [],
+    });
+
 
     if (!registerForm.name) errors.name = "El nombre es obligatorio.";
     if (!registerForm.email) errors.email = "El correo es obligatorio.";
