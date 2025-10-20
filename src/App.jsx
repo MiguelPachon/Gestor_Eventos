@@ -53,6 +53,16 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    description: "",
+    category: "",
+    date: "",
+    location: "",
+    max_capacity: "",
+    image: ""
+  });
+
 
   const [loginForm, setLoginForm] = useState({ name: '', email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
@@ -178,8 +188,23 @@ function App() {
       ...user,
       registeredEvents: user.registeredEvents.filter(id => id !== eventId)
     });
-    addNotification('❌ Has cancelado tu inscripción en el evento.');
+    addNotification(' Has cancelado tu inscripción en el evento.');
   }, [user]);
+
+  const handleCreateEvent = (e) => {
+    e.preventDefault();
+    addNotification(`Evento "${newEvent.title}" creado con éxito 🎉`, "success");
+    setNewEvent({
+      title: "",
+      description: "",
+      category: "",
+      date: "",
+      location: "",
+      max_capacity: "",
+      image: ""
+    });
+    setCurrentView("home");
+  };
 
   // =======================
   // HEADER
@@ -233,6 +258,16 @@ function App() {
                   )}
                 </div>
               )}
+
+              {user?.role === "organizer" && (
+                <button
+                  onClick={() => setCurrentView("create-event")}
+                  className="text-white border-2 border-white px-4 py-2 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition"
+                >
+                  Crear Evento
+                </button>
+              )}
+
 
 
               {/* Botón perfil */}
@@ -526,6 +561,71 @@ function App() {
       {currentView === 'profile' && <ProfileView />}
       {currentView === 'eventDetail' && <EventDetailView />}
 
+      {currentView === "create-event" && user?.role === "organizer" && (
+        <div className="max-w-3xl mx-auto mt-10 bg-white p-8 rounded-xl shadow-lg">
+          <h2 className="text-3xl font-bold text-purple-700 mb-6">Crear Nuevo Evento</h2>
+
+          <form onSubmit={handleCreateEvent} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Título del evento"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.title}
+              onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+              required
+            />
+            <textarea
+              placeholder="Descripción"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.description}
+              onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Categoría"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.category}
+              onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
+            />
+            <input
+              type="date"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.date}
+              onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Ubicación"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.location}
+              onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+            />
+            <input
+              type="number"
+              placeholder="Capacidad máxima"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.max_capacity}
+              onChange={(e) => setNewEvent({ ...newEvent, max_capacity: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="URL de imagen"
+              className="w-full p-3 border rounded-lg"
+              value={newEvent.image}
+              onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
+            />
+
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition"
+            >
+              Crear Evento
+            </button>
+          </form>
+        </div>
+      )}
+
+
 
       {/* ===========================
           MODAL LOGIN / REGISTRO
@@ -544,6 +644,9 @@ function App() {
               </div>
 
               {!isRegisterMode ? (
+                // ======================
+                // LOGIN
+                // ======================
                 <>
                   <div className="space-y-4">
                     {/* Email */}
@@ -552,21 +655,23 @@ function App() {
                       <input
                         type="email"
                         placeholder="tucorreo@ejemplo.com"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${loginErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${loginErrors.email ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         value={loginForm.email}
                         onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       />
                       {loginErrors.email && <p className="text-red-500 text-sm mt-1">{loginErrors.email}</p>}
                     </div>
 
-                    {/* Password */}
+                    {/* Contraseña */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
                       <div className="relative">
                         <input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="••••••"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${loginErrors.password ? 'border-red-500' : 'border-gray-300'}`}
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${loginErrors.password ? 'border-red-500' : 'border-gray-300'
+                            }`}
                           value={loginForm.password}
                           onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                         />
@@ -585,7 +690,7 @@ function App() {
                       onClick={handleLogin}
                       className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
                     >
-                      Entrar
+                      Iniciar Sesión
                     </button>
 
                     <p className="text-center text-sm text-gray-600 mt-4">
@@ -600,6 +705,9 @@ function App() {
                   </div>
                 </>
               ) : (
+                // ======================
+                // REGISTRO
+                // ======================
                 <>
                   <div className="space-y-4">
                     {/* Nombre */}
@@ -608,7 +716,8 @@ function App() {
                       <input
                         type="text"
                         placeholder="Tu nombre"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.name ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.name ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         value={registerForm.name}
                         onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
                       />
@@ -621,25 +730,80 @@ function App() {
                       <input
                         type="email"
                         placeholder="tucorreo@ejemplo.com"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.email ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         value={registerForm.email}
                         onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                       />
                       {registerErrors.email && <p className="text-red-500 text-sm mt-1">{registerErrors.email}</p>}
                     </div>
 
-                    {/* Password */}
+                    {/* Contraseña */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
                       <input
                         type="password"
                         placeholder="Mínimo 8 caracteres"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.password ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.password ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         value={registerForm.password}
                         onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                       />
-                      {registerErrors.password && <p className="text-red-500 text-sm mt-1">{registerErrors.password}</p>}
+                      {registerErrors.password && (
+                        <p className="text-red-500 text-sm mt-1">{registerErrors.password}</p>
+                      )}
                     </div>
+
+                    {/* Rol */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                      <select
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
+                        value={registerForm.role}
+                        onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}
+                      >
+                        <option value="user">Usuario</option>
+                        <option value="organizer">Organizador</option>
+                      </select>
+                    </div>
+
+                    {/* Campos adicionales solo si organizador */}
+                    {registerForm.role === 'organizer' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">NIT</label>
+                          <input
+                            type="text"
+                            placeholder="Número de NIT"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
+                            value={registerForm.nit}
+                            onChange={(e) => setRegisterForm({ ...registerForm, nit: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                          <input
+                            type="text"
+                            placeholder="Teléfono de contacto"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
+                            value={registerForm.phone}
+                            onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Documento</label>
+                          <input
+                            type="text"
+                            placeholder="Documento o identificación"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
+                            value={registerForm.document}
+                            onChange={(e) => setRegisterForm({ ...registerForm, document: e.target.value })}
+                          />
+                        </div>
+                      </>
+                    )}
 
                     <button
                       onClick={handleRegister}
@@ -664,6 +828,10 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* ===========================
+          CONFIRMACIÓN LOGOUT
+      =========================== */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
@@ -689,7 +857,7 @@ function App() {
           </div>
         </div>
       )}
-
+      
     </div>
   );
 }
