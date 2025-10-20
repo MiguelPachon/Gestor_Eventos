@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } from 'lucide-react';
+import API_URL from "./config";
+
 
 // =======================
 // Datos simulados
@@ -97,72 +99,84 @@ function App() {
   // ======================
   // LOGIN CON VALIDACIONES
   // ======================
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const errors = {};
 
-    if (!loginForm.email) errors.email = ' El correo es obligatorio.';
-    else if (!loginForm.email.includes('@')) errors.email = ' Correo electrónico inválido.';
+    if (!loginForm.email) errors.email = "El correo es obligatorio.";
+    else if (!loginForm.email.includes("@")) errors.email = "Correo electrónico inválido.";
 
-    if (!loginForm.password) errors.password = ' La contraseña es obligatoria.';
-    else if (loginForm.password.length < 6) {
-      errors.password = ' La contraseña es demasiado corta.';
-      setLoginForm({ ...loginForm, password: '' });
-    }
+    if (!loginForm.password) errors.password = "La contraseña es obligatoria.";
+    else if (loginForm.password.length < 6)
+      errors.password = "La contraseña es demasiado corta.";
 
     setLoginErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    setUser({
-      id: 1,
-      name: loginForm.name || loginForm.email.split('@')[0],
-      email: loginForm.email,
-      role: 'user',
-      registeredEvents: [],
-      createdEvents: []
-    });
-    addNotification(' Sesión iniciada correctamente.');
-    setShowLoginModal(false);
-    setLoginForm({ name: '', email: '', password: '' });
-    setLoginErrors({});
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginForm),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Error al iniciar sesión");
+
+      setUser(data.user);
+      addNotification("Sesión iniciada correctamente ");
+      setShowLoginModal(false);
+      setLoginForm({ name: "", email: "", password: "" });
+    } catch (error) {
+      addNotification(error.message, "error");
+    }
   };
+
 
   // ==========================
   // REGISTRO CON VALIDACIONES
   // ==========================
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const errors = {};
 
-    if (!registerForm.name) errors.name = ' El nombre es obligatorio.';
-    if (!registerForm.email) errors.email = ' El correo es obligatorio.';
-    else if (!registerForm.email.includes('@')) errors.email = ' Correo electrónico inválido.';
-    if (!registerForm.password) errors.password = ' La contraseña es obligatoria.';
+    if (!registerForm.name) errors.name = "El nombre es obligatorio.";
+    if (!registerForm.email) errors.email = "El correo es obligatorio.";
+    else if (!registerForm.email.includes("@")) errors.email = "Correo electrónico inválido.";
+    if (!registerForm.password) errors.password = "La contraseña es obligatoria.";
     else if (registerForm.password.length < 8)
-      errors.password = 'La contraseña debe tener al menos 8 caracteres.';
+      errors.password = "La contraseña debe tener al menos 8 caracteres.";
 
     setRegisterErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    addNotification('Registro exitoso. Bienvenido/a!');
-    setUser({
-      id: Date.now(),
-      name: registerForm.name,
-      email: registerForm.email,
-      role: registerForm.role,
-      registeredEvents: [],
-      createdEvents: []
-    });
-    setShowLoginModal(false);
-    setRegisterForm({
-      name: '', email: '', password: '', role: 'user', nit: '', phone: '', document: ''
-    });
-    setRegisterErrors({});
+    try {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registerForm),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Error al registrarse");
+
+      addNotification("Registro exitoso Bienvenido/a!");
+      setUser(data.user);
+      setShowLoginModal(false);
+      setRegisterForm({
+        name: "",
+        email: "",
+        password: "",
+        role: "user",
+        nit: "",
+        phone: "",
+        document: "",
+      });
+    } catch (error) {
+      addNotification(error.message, "error");
+    }
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setCurrentView('home');
-    addNotification('Sesión cerrada correctamente.');
-  };
 
   // =======================
   // INSCRIPCIONES
@@ -191,20 +205,37 @@ function App() {
     addNotification(' Has cancelado tu inscripción en el evento.');
   }, [user]);
 
-  const handleCreateEvent = (e) => {
+  const handleCreateEvent = async (e) => {
     e.preventDefault();
-    addNotification(`Evento "${newEvent.title}" creado con éxito 🎉`, "success");
-    setNewEvent({
-      title: "",
-      description: "",
-      category: "",
-      date: "",
-      location: "",
-      max_capacity: "",
-      image: ""
-    });
-    setCurrentView("home");
+
+    try {
+      const res = await fetch(`${API_URL}/api/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEvent),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Error al crear evento");
+
+      addNotification(`Evento "${data.title}" creado con éxito `, "success");
+      setNewEvent({
+        title: "",
+        description: "",
+        category: "",
+        date: "",
+        location: "",
+        max_capacity: "",
+        image: "",
+      });
+      setCurrentView("home");
+    } catch (error) {
+      addNotification(error.message, "error");
+    }
   };
+
+
 
   // =======================
   // HEADER
@@ -857,7 +888,7 @@ function App() {
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }
