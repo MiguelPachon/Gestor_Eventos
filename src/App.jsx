@@ -101,41 +101,44 @@ function App() {
   // ======================
   const handleLogin = async () => {
     const errors = {};
-    setUser({
-      ...data.user || data,
-      registeredEvents: data.user?.registeredEvents || data.registeredEvents || [],
-      createdEvents: data.user?.createdEvents || data.createdEvents || [],
-    });
-
+  
     if (!loginForm.email) errors.email = "El correo es obligatorio.";
     else if (!loginForm.email.includes("@")) errors.email = "Correo electrónico inválido.";
-
+  
     if (!loginForm.password) errors.password = "La contraseña es obligatoria.";
     else if (loginForm.password.length < 6)
       errors.password = "La contraseña es demasiado corta.";
-
+  
     setLoginErrors(errors);
     if (Object.keys(errors).length > 0) return;
-
+  
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginForm),
       });
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) throw new Error(data.message || "Error al iniciar sesión");
-
-      setUser(data.user);
-      addNotification("Sesión iniciada correctamente ");
+  
+      // 🟣 Normalización segura del usuario
+      const normalizedUser = {
+        ...data.user || data,
+        registeredEvents: data.user?.registeredEvents || data.registeredEvents || [],
+        createdEvents: data.user?.createdEvents || data.createdEvents || [],
+      };
+  
+      setUser(normalizedUser);
+      addNotification("Sesión iniciada correctamente ✅");
       setShowLoginModal(false);
       setLoginForm({ name: "", email: "", password: "" });
     } catch (error) {
       addNotification(error.message, "error");
     }
   };
+  
 
 
   // ==========================
@@ -143,37 +146,37 @@ function App() {
   // ==========================
   const handleRegister = async () => {
     const errors = {};
-
-    setUser({
-      ...data.user || data,
-      registeredEvents: [],
-      createdEvents: [],
-    });
-
-
+  
     if (!registerForm.name) errors.name = "El nombre es obligatorio.";
     if (!registerForm.email) errors.email = "El correo es obligatorio.";
     else if (!registerForm.email.includes("@")) errors.email = "Correo electrónico inválido.";
     if (!registerForm.password) errors.password = "La contraseña es obligatoria.";
     else if (registerForm.password.length < 8)
       errors.password = "La contraseña debe tener al menos 8 caracteres.";
-
+  
     setRegisterErrors(errors);
     if (Object.keys(errors).length > 0) return;
-
+  
     try {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerForm),
       });
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) throw new Error(data.message || "Error al registrarse");
-
-      addNotification("Registro exitoso Bienvenido/a!");
-      setUser(data.user);
+  
+      // 🟣 Normalización para evitar el crash
+      const normalizedUser = {
+        ...data.user || data,
+        registeredEvents: [],
+        createdEvents: [],
+      };
+  
+      setUser(normalizedUser);
+      addNotification("Registro exitoso 🎉 ¡Bienvenido/a!");
       setShowLoginModal(false);
       setRegisterForm({
         name: "",
@@ -188,6 +191,7 @@ function App() {
       addNotification(error.message, "error");
     }
   };
+  
 
 
   // =======================
