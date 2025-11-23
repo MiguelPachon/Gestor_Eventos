@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } from 'lucide-react';
 import API_URL from "./config";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
-import jwtDecode from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from 'react-router-dom';
 
 
