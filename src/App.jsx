@@ -84,11 +84,7 @@ function App() {
     const errors = {};
 
     if (!loginForm.email) errors.email = "El correo es obligatorio.";
-    else if (!loginForm.email.includes("@")) errors.email = "Correo electrónico inválido.";
-
     if (!loginForm.password) errors.password = "La contraseña es obligatoria.";
-    else if (loginForm.password.length < 6)
-      errors.password = "La contraseña es demasiado corta.";
 
     setLoginErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -102,28 +98,33 @@ function App() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Error al iniciar sesión");
+      if (!res.ok) {
 
-      
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+        setLoginErrors({ general: data.message || "Correo o contraseña incorrectos" });
+        return;
       }
 
-      
+
+      if (data.token) localStorage.setItem("token", data.token);
+
+
       const normalizedUser = {
-        ...data.user || data,
-        registeredEvents: data.user?.registeredEvents || data.registeredEvents || [],
-        createdEvents: data.user?.createdEvents || data.createdEvents || [],
+        ...data.user,
+        registeredEvents: data.user?.registeredEvents || [],
+        createdEvents: data.user?.createdEvents || [],
       };
 
       setUser(normalizedUser);
       addNotification("Sesión iniciada correctamente ✅");
+
       setShowLoginModal(false);
-      setLoginForm({ name: "", email: "", password: "" });
+      setLoginForm({ email: "", password: "" });
+      setLoginErrors({});
     } catch (error) {
-      addNotification(error.message, "error");
+      setLoginErrors({ general: "Error al conectar con el servidor" });
     }
   };
+
 
 
 
@@ -155,12 +156,12 @@ function App() {
 
       if (!res.ok) throw new Error(data.message || "Error al registrarse");
 
-      
+
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
-      
+
       const normalizedUser = {
         ...data.user || data,
         registeredEvents: [],
@@ -207,12 +208,12 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-    
+
       setUser({
         ...user,
         registeredEvents: [...user.registeredEvents, eventId]
       });
-      
+
       setEvents(prev =>
         prev.map(ev =>
           ev.id === eventId
@@ -220,7 +221,7 @@ function App() {
             : ev
         )
       );
-      
+
 
       addNotification("Inscripción exitosa");
     } catch (error) {
@@ -232,22 +233,22 @@ function App() {
   const handleCancelRegistration = async (eventId) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-  
+
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/cancel`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
-  
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-  
+
       // 🟣 Actualiza el usuario
       setUser({
         ...user,
         registeredEvents: user.registeredEvents.filter(id => id !== eventId)
       });
-  
+
       // 🟣 Actualiza el contador de inscritos en pantalla
       setEvents(prev =>
         prev.map(ev =>
@@ -256,16 +257,21 @@ function App() {
             : ev
         )
       );
-  
+
       addNotification("Inscripción cancelada");
     } catch (error) {
       addNotification(error.message, "error");
     }
   };
-  
+
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
+
+    if (!newEvent.date || new Date(newEvent.date) < new Date()) {
+      addNotification("La fecha es inválida o ya pasó.", "error");
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -289,7 +295,7 @@ function App() {
 
       addNotification(`Evento "${data.event.title}" creado con éxito 🎉`, "success");
 
-     
+
       setEvents(prev => [...prev, data.event]);
 
 
@@ -321,7 +327,7 @@ function App() {
   // LOGOUT (Cerrar Sesión)
   // =======================
   const handleLogout = () => {
-    localStorage.removeItem("token"); 
+    localStorage.removeItem("token");
     setUser(null);
     setShowLogoutConfirm(false);
     addNotification("Sesión cerrada correctamente ", "info");
@@ -713,10 +719,18 @@ function App() {
             />
             <input
               type="date"
-              className="w-full p-3 border rounded-lg"
+              className={`w-full p-3 border rounded-lg ${!newEvent.date ? "text-gray-400" : "text-gray-900"}`}
               value={newEvent.date}
               onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+              onFocus={(e) => e.target.showPicker && e.target.showPicker()}
+              placeholder="dd-mm-yyyy"
             />
+            {newEvent.date && new Date(newEvent.date) < new Date() && (
+              <p className="text-red-500 text-sm mt-1">
+                La fecha no puede ser menor a hoy.
+              </p>
+            )}
+
             <input
               type="text"
               placeholder="Ubicación"
@@ -816,6 +830,12 @@ function App() {
                     >
                       Iniciar Sesión
                     </button>
+                    {loginErrors.general && (
+                      <p className="text-red-500 text-sm text-center mt-2">
+                        {loginErrors.general}
+                      </p>
+                    )}
+
 
                     <p className="text-center text-sm text-gray-600 mt-4">
                       ¿No tienes cuenta?{' '}
