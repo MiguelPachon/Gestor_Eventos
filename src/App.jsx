@@ -212,6 +212,15 @@ function App() {
         ...user,
         registeredEvents: [...user.registeredEvents, eventId]
       });
+      
+      setEvents(prev =>
+        prev.map(ev =>
+          ev.id === eventId
+            ? { ...ev, registered: (ev.registered ?? 0) + 1 }
+            : ev
+        )
+      );
+      
 
       addNotification("Inscripción exitosa");
     } catch (error) {
