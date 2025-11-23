@@ -296,23 +296,48 @@ function App() {
       setShowLoginModal(true);
       return;
     }
-
+  
+    
+    setUser(prevUser => ({
+      ...prevUser,
+      registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
+    }));
+  
+    setEvents(prevEvents =>
+      prevEvents.map(ev =>
+        ev.id === eventId
+          ? { ...ev, registered: (ev.registered ?? 0) + 1 }
+          : ev
+      )
+    );
+  
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/register`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-     
-      setUser(prevUser => ({
-        ...prevUser,
-        registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
-      }));
-
-     
+      
+      if (!res.ok) {
+        
+        setUser(prevUser => ({
+          ...prevUser,
+          registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
+        }));
+        
+        setEvents(prevEvents =>
+          prevEvents.map(ev =>
+            ev.id === eventId
+              ? { ...ev, registered: (ev.registered ?? 1) - 1 }
+              : ev
+          )
+        );
+        
+        throw new Error(data.message);
+      }
+  
+      
       setEvents(prevEvents =>
         prevEvents.map(ev =>
           ev.id === eventId
@@ -320,9 +345,7 @@ function App() {
             : ev
         )
       );
-
-      
-
+  
       addNotification("Inscripción exitosa! ✅");
       addNotification("📧 Te enviaremos un correo de confirmación ");
     } catch (error) {
@@ -334,6 +357,20 @@ function App() {
     const token = localStorage.getItem("token");
     if (!token) return;
   
+   
+    setUser(prevUser => ({
+      ...prevUser,
+      registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
+    }));
+  
+    setEvents(prevEvents =>
+      prevEvents.map(ev =>
+        ev.id === eventId
+          ? { ...ev, registered: Math.max((ev.registered ?? 1) - 1, 0) }
+          : ev
+      )
+    );
+  
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/cancel`, {
         method: "DELETE",
@@ -341,13 +378,24 @@ function App() {
       });
   
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-  
       
-      setUser(prevUser => ({
-        ...prevUser,
-        registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
-      }));
+      if (!res.ok) {
+        
+        setUser(prevUser => ({
+          ...prevUser,
+          registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
+        }));
+        
+        setEvents(prevEvents =>
+          prevEvents.map(ev =>
+            ev.id === eventId
+              ? { ...ev, registered: (ev.registered ?? 0) + 1 }
+              : ev
+          )
+        );
+        
+        throw new Error(data.message);
+      }
   
       
       setEvents(prevEvents =>
@@ -357,8 +405,6 @@ function App() {
             : ev
         )
       );
-  
-      
   
       addNotification("Inscripción cancelada correctamente");
     } catch (error) {
