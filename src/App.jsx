@@ -1042,6 +1042,7 @@ function App() {
                             if (data.token) {
                               localStorage.setItem("token", data.token);
                               
+                              // 🟢 Normalizar datos correctamente
                               const normalizedUser = {
                                 ...data.user,
                                 registeredEvents: data.user?.registeredEvents || [],
@@ -1052,9 +1053,6 @@ function App() {
                               setShowLoginModal(false);
                               setCurrentView('home');
                               addNotification("Sesión iniciada con Google ✅");
-                              
-                              // Forzar actualización de la UI
-                              window.history.pushState({}, '', '/');
                             }
                           } catch (error) {
                             console.error("Error en login con Google:", error);
@@ -1064,6 +1062,7 @@ function App() {
                         onError={() => addNotification("Error al iniciar con Google", "error")}
                         useOneTap={false}
                         auto_select={false}
+                        prompt="select_account"
                       />
                     </div>
 
