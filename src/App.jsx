@@ -229,13 +229,40 @@ function App() {
   };
 
 
-  const handleCancelRegistration = useCallback((eventId) => {
-    setUser({
-      ...user,
-      registeredEvents: user.registeredEvents.filter(id => id !== eventId)
-    });
-    addNotification(' Has cancelado tu inscripción en el evento.');
-  }, [user]);
+  const handleCancelRegistration = async (eventId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+  
+    try {
+      const res = await fetch(`${API_URL}/api/events/${eventId}/cancel`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+  
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+  
+      // 🟣 Actualiza el usuario
+      setUser({
+        ...user,
+        registeredEvents: user.registeredEvents.filter(id => id !== eventId)
+      });
+  
+      // 🟣 Actualiza el contador de inscritos en pantalla
+      setEvents(prev =>
+        prev.map(ev =>
+          ev.id === eventId
+            ? { ...ev, registered: data.registered } // <- contador bajado desde backend
+            : ev
+        )
+      );
+  
+      addNotification("Inscripción cancelada");
+    } catch (error) {
+      addNotification(error.message, "error");
+    }
+  };
+  
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
