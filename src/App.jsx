@@ -72,9 +72,14 @@ function App() {
     loadEvents();
   }, []);
 
+  const [loadingUser, setLoadingUser] = useState(true);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      setLoadingUser(false);
+      return;
+    }
 
     (async () => {
       const res = await fetch(`${API_URL}/api/auth/me`, {
@@ -87,8 +92,10 @@ function App() {
       } else {
         localStorage.removeItem("token");
       }
+      setLoadingUser(false);
     })();
   }, []);
+
 
 
 
@@ -725,6 +732,15 @@ function App() {
   // =======================
   // RENDER PRINCIPAL
   // =======================
+
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700 text-xl">
+        Cargando...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -986,7 +1002,7 @@ function App() {
                     </button>
 
                     <GoogleLogin
-                      key={googleKey}   
+                      key={googleKey}
                       onSuccess={async (credentialResponse) => {
                         const decoded = jwtDecode(credentialResponse.credential);
 
@@ -1007,7 +1023,7 @@ function App() {
                         if (data.token) {
                           localStorage.setItem("token", data.token);
                           setUser(data.user);
-                          setCurrentView('home'); 
+                          setCurrentView('home');
                         }
 
                         addNotification("Sesión iniciada con Google");
