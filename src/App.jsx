@@ -18,6 +18,33 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const handleDeleteEvent = async (eventId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setEvents(prev => prev.filter(ev => ev.id !== eventId));
+
+      setUser(prev => ({
+        ...prev,
+        createdEvents: prev.createdEvents?.filter(id => id !== eventId)
+      }));
+
+      addNotification("Evento eliminado correctamente ✔️");
+    } catch (error) {
+      addNotification(error.message, "error");
+    }
+  };
+
+
   useEffect(() => {
     const loadEvents = async () => {
       try {
@@ -73,19 +100,24 @@ function App() {
     const matchesSearch =
       event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description.toLowerCase().includes(searchTerm.toLowerCase());
-  
+
     const matchesCategory =
       selectedCategory === 'all' ||
       event.category.toLowerCase() === selectedCategory.toLowerCase();
-  
-    // Normalizar fecha del evento YYYY-MM-DD
+
+
     const eventDate = new Date(event.date);
-    const eventDateString = eventDate.toISOString().slice(0, 10);
-  
+    const eventDateString = [
+      eventDate.getFullYear(),
+      String(eventDate.getMonth() + 1).padStart(2, "0"),
+      String(eventDate.getDate()).padStart(2, "0")
+    ].join("-");
+
+
     const matchesDate =
       !selectedDate ||
       eventDateString === selectedDate;
-  
+
     return matchesSearch && matchesCategory && matchesDate;
   });
 
@@ -482,6 +514,54 @@ function App() {
         </div>
 
         <h3 className="text-2xl font-bold text-gray-900 mb-6">Mis Eventos Inscritos</h3>
+        {/* ===========================
+              MIS EVENTOS CREADOS
+            =========================== */}
+        <h3 className="text-2xl font-bold text-gray-900 mt-12 mb-6">Mis Eventos Creados</h3>
+
+        {events.filter(e => user?.createdEvents?.includes(e.id)).length === 0 ? (
+          <div className="bg-white rounded-xl shadow p-12 text-center">
+            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No has creado ningún evento aún</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events
+              .filter(e => user?.createdEvents?.includes(e.id))
+              .map(event => (
+                <div key={event.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                  <img src={event.image} alt={event.title} className="w-full h-40 object-cover" />
+
+                  <div className="p-6">
+                    <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                      {event.category}
+                    </span>
+
+                    <h4 className="text-lg font-bold text-gray-900 mt-3 mb-2">{event.title}</h4>
+
+                    <div className="flex items-center text-sm text-gray-600 mb-2">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {new Date(event.date).toLocaleDateString('es-ES')}
+                    </div>
+
+                    <div className="flex items-center text-sm text-gray-600 mb-4">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {event.location}
+                    </div>
+
+                    {/* BOTÓN ELIMINAR*/}
+                    <button
+                      onClick={() => handleDeleteEvent(event.id)}
+                      className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition"
+                    >
+                      Eliminar Evento
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+
 
         {userEvents.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-12 text-center">
