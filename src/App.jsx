@@ -302,29 +302,35 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
   
-      // 🟢 CRÍTICO: Usar callback function
-      setUser(prevUser => ({
-        ...prevUser,
-        registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
-      }));
+      // 🟢 SOLUCIÓN: Crear nuevo array completamente nuevo
+      setUser(prevUser => {
+        const newRegisteredEvents = [...(prevUser?.registeredEvents || []), eventId];
+        return {
+          ...prevUser,
+          registeredEvents: newRegisteredEvents
+        };
+      });
   
-      // 🟢 Actualizar eventos
+      // 🟢 Actualizar eventos con nuevo array
       setEvents(prevEvents =>
-        prevEvents.map(ev =>
-          ev.id === eventId
-            ? { ...ev, registered: (ev.registered ?? 0) + 1 }
-            : ev
-        )
+        prevEvents.map(ev => {
+          if (ev.id === eventId) {
+            return { ...ev, registered: (ev.registered ?? 0) + 1 };
+          }
+          return ev;
+        })
       );
   
       addNotification("Inscripción exitosa ✅");
       addNotification("📧 Te enviaremos un correo de confirmación");
+      
+      // 🟢 FORZAR RE-RENDER
+      setCurrentView('home'); // Asegura que estamos en home
     } catch (error) {
       addNotification(error.message, "error");
     }
   };
-
-
+  
   const handleCancelRegistration = async (eventId) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -338,19 +344,23 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
   
-      // 🟢 CRÍTICO: Usar callback function
-      setUser(prevUser => ({
-        ...prevUser,
-        registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
-      }));
+      // 🟢 SOLUCIÓN: Crear nuevo array completamente nuevo
+      setUser(prevUser => {
+        const newRegisteredEvents = (prevUser?.registeredEvents || []).filter(id => id !== eventId);
+        return {
+          ...prevUser,
+          registeredEvents: newRegisteredEvents
+        };
+      });
   
-      // 🟢 Actualizar contador
+      // 🟢 Actualizar eventos con valor del backend
       setEvents(prevEvents =>
-        prevEvents.map(ev =>
-          ev.id === eventId
-            ? { ...ev, registered: data.registered }
-            : ev
-        )
+        prevEvents.map(ev => {
+          if (ev.id === eventId) {
+            return { ...ev, registered: data.registered };
+          }
+          return ev;
+        })
       );
   
       addNotification("Inscripción cancelada correctamente");
