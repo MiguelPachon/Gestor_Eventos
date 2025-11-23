@@ -212,7 +212,7 @@ function App() {
       };
 
       setUser(normalizedUser);
-      addNotification("Sesión iniciada correctamente ✅");
+      addNotification("Sesión iniciada correctamente! ✅");
 
       setShowLoginModal(false);
       setCurrentView("home");
@@ -296,36 +296,35 @@ function App() {
       setShowLoginModal(true);
       return;
     }
-
+  
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/register`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-
-      // Actualizar usuario
+  
+      
       setUser(prevUser => ({
         ...prevUser,
         registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
       }));
-
-      // Actualizar eventos
+  
+      
       setEvents(prevEvents =>
         prevEvents.map(ev =>
           ev.id === eventId
-            ? { ...ev, registered: (ev.registered ?? 0) + 1 }
+            ? { ...ev, registered: data.registered } 
             : ev
         )
       );
-
-      // 🟢 FORZAR RE-RENDER NUCLEAR
+  
       setRefreshKey(prev => prev + 1);
-
-      addNotification("Inscripción exitosa ✅");
-      addNotification("📧 Te enviaremos un correo de confirmación");
+  
+      addNotification("Inscripción exitosa! ✅");
+      addNotification("📧 Te enviaremos un correo de confirmación ");
     } catch (error) {
       addNotification(error.message, "error");
     }
@@ -344,13 +343,13 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      // Actualizar usuario
+   
       setUser(prevUser => ({
         ...prevUser,
         registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
       }));
 
-      // Actualizar eventos
+      
       setEvents(prevEvents =>
         prevEvents.map(ev =>
           ev.id === eventId
@@ -359,7 +358,7 @@ function App() {
         )
       );
 
-      // 🟢 FORZAR RE-RENDER NUCLEAR
+   
       setRefreshKey(prev => prev + 1);
 
       addNotification("Inscripción cancelada correctamente");
@@ -409,7 +408,7 @@ function App() {
 
 
 
-      //  Limpia el formulario
+      
       setNewEvent({
         title: "",
         description: "",
@@ -420,7 +419,7 @@ function App() {
         image: "",
       });
 
-      // Regresa a home correctamente
+    
       setSelectedEvent(null);
       setCurrentView("home");
 
@@ -1063,7 +1062,7 @@ function App() {
                             if (data.token) {
                               localStorage.setItem("token", data.token);
 
-                              // 🟢 SOLUCIÓN: Volver a cargar el usuario completo desde /me
+                              
                               const userRes = await fetch(`${API_URL}/api/auth/me`, {
                                 headers: { Authorization: `Bearer ${data.token}` }
                               });
