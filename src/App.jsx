@@ -1022,31 +1022,48 @@ function App() {
                       <GoogleLogin
                         key={googleKey}
                         onSuccess={async (credentialResponse) => {
-                          const decoded = jwtDecode(credentialResponse.credential);
+                          try {
+                            const decoded = jwtDecode(credentialResponse.credential);
 
-                          const googleUser = {
-                            name: decoded.name,
-                            email: decoded.email,
-                            googleId: decoded.sub,
-                          };
+                            const googleUser = {
+                              name: decoded.name,
+                              email: decoded.email,
+                              googleId: decoded.sub,
+                            };
 
-                          const res = await fetch(`${API_URL}/api/auth/google-login`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(googleUser),
-                          });
+                            const res = await fetch(`${API_URL}/api/auth/google-login`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(googleUser),
+                            });
 
-                          const data = await res.json();
+                            const data = await res.json();
 
-                          if (data.token) {
-                            localStorage.setItem("token", data.token);
-                            setUser(data.user);
-                            setShowLoginModal(false);
-                            setCurrentView('home');
-                            addNotification("Sesión iniciada con Google ✅");
+                            if (data.token) {
+                              localStorage.setItem("token", data.token);
+                              
+                              const normalizedUser = {
+                                ...data.user,
+                                registeredEvents: data.user?.registeredEvents || [],
+                                createdEvents: data.user?.createdEvents || [],
+                              };
+                              
+                              setUser(normalizedUser);
+                              setShowLoginModal(false);
+                              setCurrentView('home');
+                              addNotification("Sesión iniciada con Google ✅");
+                              
+                              // Forzar actualización de la UI
+                              window.history.pushState({}, '', '/');
+                            }
+                          } catch (error) {
+                            console.error("Error en login con Google:", error);
+                            addNotification("Error al iniciar con Google", "error");
                           }
                         }}
                         onError={() => addNotification("Error al iniciar con Google", "error")}
+                        useOneTap={false}
+                        auto_select={false}
                       />
                     </div>
 
