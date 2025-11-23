@@ -21,6 +21,7 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const [refreshKey, setRefreshKey] = useState(0);
   const [googleKey, setGoogleKey] = useState(Date.now());
 
 
@@ -302,30 +303,26 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
   
-      // 🟢 SOLUCIÓN: Crear nuevo array completamente nuevo
-      setUser(prevUser => {
-        const newRegisteredEvents = [...(prevUser?.registeredEvents || []), eventId];
-        return {
-          ...prevUser,
-          registeredEvents: newRegisteredEvents
-        };
-      });
+      // Actualizar usuario
+      setUser(prevUser => ({
+        ...prevUser,
+        registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
+      }));
   
-      // 🟢 Actualizar eventos con nuevo array
+      // Actualizar eventos
       setEvents(prevEvents =>
-        prevEvents.map(ev => {
-          if (ev.id === eventId) {
-            return { ...ev, registered: (ev.registered ?? 0) + 1 };
-          }
-          return ev;
-        })
+        prevEvents.map(ev =>
+          ev.id === eventId
+            ? { ...ev, registered: (ev.registered ?? 0) + 1 }
+            : ev
+        )
       );
+  
+      // 🟢 FORZAR RE-RENDER NUCLEAR
+      setRefreshKey(prev => prev + 1);
   
       addNotification("Inscripción exitosa ✅");
       addNotification("📧 Te enviaremos un correo de confirmación");
-      
-      // 🟢 FORZAR RE-RENDER
-      setCurrentView('home'); // Asegura que estamos en home
     } catch (error) {
       addNotification(error.message, "error");
     }
@@ -344,24 +341,23 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
   
-      // 🟢 SOLUCIÓN: Crear nuevo array completamente nuevo
-      setUser(prevUser => {
-        const newRegisteredEvents = (prevUser?.registeredEvents || []).filter(id => id !== eventId);
-        return {
-          ...prevUser,
-          registeredEvents: newRegisteredEvents
-        };
-      });
+      // Actualizar usuario
+      setUser(prevUser => ({
+        ...prevUser,
+        registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
+      }));
   
-      // 🟢 Actualizar eventos con valor del backend
+      // Actualizar eventos
       setEvents(prevEvents =>
-        prevEvents.map(ev => {
-          if (ev.id === eventId) {
-            return { ...ev, registered: data.registered };
-          }
-          return ev;
-        })
+        prevEvents.map(ev =>
+          ev.id === eventId
+            ? { ...ev, registered: data.registered }
+            : ev
+        )
       );
+  
+      // 🟢 FORZAR RE-RENDER NUCLEAR
+      setRefreshKey(prev => prev + 1);
   
       addNotification("Inscripción cancelada correctamente");
     } catch (error) {
@@ -817,7 +813,7 @@ function App() {
               <p className="text-gray-600">{filteredEvents.length} eventos encontrados</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div key={refreshKey} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredEvents.map(event => (
                 <div key={event.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
                   <img src={event.image} alt={event.title} className="w-full h-48 object-cover" />
