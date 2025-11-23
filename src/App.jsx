@@ -296,33 +296,33 @@ function App() {
       setShowLoginModal(true);
       return;
     }
-  
+
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/register`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-  
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-  
-      
+
+     
       setUser(prevUser => ({
         ...prevUser,
         registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
       }));
-  
-      
+
+     
       setEvents(prevEvents =>
         prevEvents.map(ev =>
           ev.id === eventId
-            ? { ...ev, registered: data.registered } 
+            ? { ...ev, registered: data.registered }
             : ev
         )
       );
-  
-      setRefreshKey(prev => prev + 1);
-  
+
+      
+
       addNotification("Inscripción exitosa! ✅");
       addNotification("📧 Te enviaremos un correo de confirmación ");
     } catch (error) {
@@ -333,22 +333,22 @@ function App() {
   const handleCancelRegistration = async (eventId) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-
+  
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/cancel`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-
-   
+  
+      
       setUser(prevUser => ({
         ...prevUser,
         registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
       }));
-
+  
       
       setEvents(prevEvents =>
         prevEvents.map(ev =>
@@ -357,10 +357,9 @@ function App() {
             : ev
         )
       );
-
-   
-      setRefreshKey(prev => prev + 1);
-
+  
+      
+  
       addNotification("Inscripción cancelada correctamente");
     } catch (error) {
       addNotification(error.message, "error");
@@ -408,7 +407,7 @@ function App() {
 
 
 
-      
+
       setNewEvent({
         title: "",
         description: "",
@@ -419,7 +418,7 @@ function App() {
         image: "",
       });
 
-    
+
       setSelectedEvent(null);
       setCurrentView("home");
 
@@ -1062,7 +1061,7 @@ function App() {
                             if (data.token) {
                               localStorage.setItem("token", data.token);
 
-                              
+
                               const userRes = await fetch(`${API_URL}/api/auth/me`, {
                                 headers: { Authorization: `Bearer ${data.token}` }
                               });
