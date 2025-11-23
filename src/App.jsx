@@ -83,17 +83,28 @@ function App() {
     }
 
     (async () => {
-      const res = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      try {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      } else {
+        if (res.ok) {
+          const data = await res.json();
+          const normalizedUser = {
+            ...data.user,
+            registeredEvents: data.user?.registeredEvents || [],
+            createdEvents: data.user?.createdEvents || []
+          };
+          setUser(normalizedUser);
+        } else {
+          localStorage.removeItem("token");
+        }
+      } catch (error) {
+        console.error("Error:", error);
         localStorage.removeItem("token");
+      } finally {
+        setLoadingUser(false);
       }
-      setLoadingUser(false);
     })();
   }, []);
 
@@ -291,11 +302,11 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-
-      setUser({
-        ...user,
-        registeredEvents: [...user.registeredEvents, eventId]
-      });
+      // ✅ Actualizar con callback
+      setUser(prev => ({
+        ...prev,
+        registeredEvents: [...(prev?.registeredEvents || []), eventId]
+      }));
 
       setEvents(prev =>
         prev.map(ev =>
@@ -305,8 +316,8 @@ function App() {
         )
       );
 
-
-      addNotification("Inscripción exitosa");
+      addNotification("Inscripción exitosa ✅");
+      addNotification("📧 Te enviaremos un correo de confirmación");
     } catch (error) {
       addNotification(error.message, "error");
     }
@@ -326,22 +337,21 @@ function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      // 🟣 Actualiza el usuario
-      setUser({
-        ...user,
-        registeredEvents: user.registeredEvents.filter(id => id !== eventId)
-      });
+      // ✅ Actualizar con callback
+      setUser(prev => ({
+        ...prev,
+        registeredEvents: (prev?.registeredEvents || []).filter(id => id !== eventId)
+      }));
 
-      // 🟣 Actualiza el contador de inscritos en pantalla
       setEvents(prev =>
         prev.map(ev =>
           ev.id === eventId
-            ? { ...ev, registered: data.registered } // <- contador bajado desde backend
+            ? { ...ev, registered: data.registered }
             : ev
         )
       );
 
-      addNotification("Inscripción cancelada");
+      addNotification("Inscripción cancelada correctamente");
     } catch (error) {
       addNotification(error.message, "error");
     }
@@ -1041,14 +1051,14 @@ function App() {
 
                             if (data.token) {
                               localStorage.setItem("token", data.token);
-                              
-                              
+
+
                               const normalizedUser = {
                                 ...data.user,
                                 registeredEvents: data.user?.registeredEvents || [],
                                 createdEvents: data.user?.createdEvents || [],
                               };
-                              
+
                               setUser(normalizedUser);
                               setShowLoginModal(false);
                               setCurrentView('home');
