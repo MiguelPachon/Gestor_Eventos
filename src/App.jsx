@@ -104,12 +104,12 @@ function App() {
 
       if (!res.ok) throw new Error(data.message || "Error al iniciar sesión");
 
-      // 🟣 Guardar el token JWT si el backend lo envía
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
-      // 🟣 Normalización segura del usuario
+      
       const normalizedUser = {
         ...data.user || data,
         registeredEvents: data.user?.registeredEvents || data.registeredEvents || [],
@@ -155,12 +155,12 @@ function App() {
 
       if (!res.ok) throw new Error(data.message || "Error al registrarse");
 
-      // 🟣 Guardar el token JWT si el backend lo envía
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
-      // 🟣 Normalización para evitar crash
+      
       const normalizedUser = {
         ...data.user || data,
         registeredEvents: [],
@@ -190,21 +190,35 @@ function App() {
   // =======================
   // INSCRIPCIONES
   // =======================
-  const handleRegisterToEvent = useCallback((eventId) => {
-    if (!user) {
+  const handleRegisterToEvent = async (eventId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      addNotification("Inicia sesión para inscribirte", "error");
       setShowLoginModal(true);
       return;
     }
-    if (user.registeredEvents.includes(eventId)) {
-      addNotification('Ya estás inscrito en este evento.', 'error');
-      return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/events/${eventId}/register`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+    
+      setUser({
+        ...user,
+        registeredEvents: [...user.registeredEvents, eventId]
+      });
+
+      addNotification("Inscripción exitosa");
+    } catch (error) {
+      addNotification(error.message, "error");
     }
-    setUser({
-      ...user,
-      registeredEvents: [...user.registeredEvents, eventId]
-    });
-    addNotification('Te has inscrito exitosamente en el evento.');
-  }, [user]);
+  };
+
 
   const handleCancelRegistration = useCallback((eventId) => {
     setUser({
@@ -237,12 +251,13 @@ function App() {
 
       if (!res.ok) throw new Error(data.message || "Error al crear evento");
 
-      addNotification(`Evento "${data.title}" creado con éxito 🎉`, "success");
+      addNotification(`Evento "${data.event.title}" creado con éxito 🎉`, "success");
 
-      // 🟣 Agrega el nuevo evento al listado
-      setEvents(prev => [...prev, data]);
+     
+      setEvents(prev => [...prev, data.event]);
 
-      // 🟣 Limpia el formulario
+
+      //  Limpia el formulario
       setNewEvent({
         title: "",
         description: "",
@@ -253,7 +268,7 @@ function App() {
         image: "",
       });
 
-      // 🟣 Regresa a home correctamente
+      // Regresa a home correctamente
       setSelectedEvent(null);
       setCurrentView("home");
 
@@ -270,7 +285,7 @@ function App() {
   // LOGOUT (Cerrar Sesión)
   // =======================
   const handleLogout = () => {
-    localStorage.removeItem("token"); // ❌ Elimina token al salir
+    localStorage.removeItem("token"); 
     setUser(null);
     setShowLogoutConfirm(false);
     addNotification("Sesión cerrada correctamente ", "info");
@@ -305,7 +320,7 @@ function App() {
                 className="relative text-white hover:bg-purple-500 p-2 rounded-lg"
                 onClick={() => {
                   setShowNotifications(!showNotifications);
-                  if (!showNotifications) setHasUnread(false); // 🟣 al abrir la campana, se quita el punto
+                  if (!showNotifications) setHasUnread(false);
                 }}
               >
                 <Bell className="w-6 h-6" />
@@ -618,9 +633,9 @@ function App() {
                       <button
                         onClick={() => handleRegisterToEvent(event.id)}
                         className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition"
-                        disabled={event.registered >= event.maxCapacity}
+                        disabled={event.registered >= event.max_capacity}
                       >
-                        {event.registered >= event.maxCapacity ? 'Cupo Lleno' : 'Inscribirme'}
+                        {event.registered >= event.max_capacity ? 'Cupo Lleno' : 'Inscribirme'}
                       </button>
                     )}
                   </div>
