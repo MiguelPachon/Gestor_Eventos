@@ -1002,40 +1002,59 @@ function App() {
                     >
                       Iniciar Sesión
                     </button>
+                    <button
+                      onClick={handleLogin}
+                      className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
+                    >
+                      Iniciar Sesión
+                    </button>
 
-                    <GoogleLogin
-                      key={googleKey}
-                      onSuccess={async (credentialResponse) => {
-                        const decoded = jwtDecode(credentialResponse.credential);
+                    {loginErrors.general && (
+                      <p className="text-red-500 text-sm text-center mt-2">
+                        {loginErrors.general}
+                      </p>
+                    )}
 
-                        const googleUser = {
-                          name: decoded.name,
-                          email: decoded.email,
-                          googleId: decoded.sub,
-                        };
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">O continúa con</span>
+                      </div>
+                    </div>
 
-                        const res = await fetch(`${API_URL}/api/auth/google-login`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(googleUser),
-                        });
+                    <div className="flex justify-center">
+                      <GoogleLogin
+                        key={googleKey}
+                        onSuccess={async (credentialResponse) => {
+                          const decoded = jwtDecode(credentialResponse.credential);
 
-                        const data = await res.json();
+                          const googleUser = {
+                            name: decoded.name,
+                            email: decoded.email,
+                            googleId: decoded.sub,
+                          };
 
-                        if (data.token) {
-                          localStorage.setItem("token", data.token);
-                          setUser(data.user);
-                          setCurrentView('home');
-                        }
+                          const res = await fetch(`${API_URL}/api/auth/google-login`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(googleUser),
+                          });
 
-                        addNotification("Sesión iniciada con Google");
-                        setShowLoginModal(false);
-                      }}
-                      onError={() => addNotification("Error al iniciar con Google", "error")}
-                    />
+                          const data = await res.json();
 
-
-
+                          if (data.token) {
+                            localStorage.setItem("token", data.token);
+                            setUser(data.user);
+                            setShowLoginModal(false);
+                            setCurrentView('home');
+                            addNotification("Sesión iniciada con Google ✅");
+                          }
+                        }}
+                        onError={() => addNotification("Error al iniciar con Google", "error")}
+                      />
+                    </div>
 
                     {loginErrors.general && (
                       <p className="text-red-500 text-sm text-center mt-2">
