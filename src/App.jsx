@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } from 'lucide-react';
 import API_URL from "./config";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
+import jwtDecode from "jwt-decode"; 
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from 'react-router-dom';
 
@@ -20,9 +21,6 @@ function App() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const [googleKey, setGoogleKey] = useState(Date.now());
-
 
   const navigate = useNavigate();
 
@@ -408,17 +406,13 @@ function App() {
   // =======================
   const handleLogout = () => {
     googleLogout(); 
-    googleLogout();
     localStorage.removeItem("token");
     setUser(null);
     setNotifications([]);
     setHasUnread(false);
     setShowLogoutConfirm(false);
     setCurrentView("home");
-    setGoogleKey(Date.now());
   };
-  
-
 
 
 
@@ -988,7 +982,6 @@ function App() {
                     </button>
 
                     <GoogleLogin
-                      key={googleKey}   
                       onSuccess={async (credentialResponse) => {
                         const decoded = jwtDecode(credentialResponse.credential);
 
@@ -1010,16 +1003,14 @@ function App() {
                           localStorage.setItem("token", data.token);
                           setUser(data.user);
                           navigate('/home'); 
-                          setCurrentView('home'); 
                         }
-                        
+
 
                         addNotification("Sesión iniciada con Google");
                         setShowLoginModal(false);
                       }}
                       onError={() => addNotification("Error al iniciar con Google", "error")}
                     />
-
 
 
 
