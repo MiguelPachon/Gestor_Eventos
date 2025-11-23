@@ -292,30 +292,31 @@ function App() {
       setShowLoginModal(true);
       return;
     }
-
+  
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/register`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-
-      // ✅ Actualizar con callback
-      setUser(prev => ({
-        ...prev,
-        registeredEvents: [...(prev?.registeredEvents || []), eventId]
+  
+      // 🟢 CRÍTICO: Usar callback function
+      setUser(prevUser => ({
+        ...prevUser,
+        registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
       }));
-
-      setEvents(prev =>
-        prev.map(ev =>
+  
+      // 🟢 Actualizar eventos
+      setEvents(prevEvents =>
+        prevEvents.map(ev =>
           ev.id === eventId
             ? { ...ev, registered: (ev.registered ?? 0) + 1 }
             : ev
         )
       );
-
+  
       addNotification("Inscripción exitosa ✅");
       addNotification("📧 Te enviaremos un correo de confirmación");
     } catch (error) {
@@ -327,30 +328,31 @@ function App() {
   const handleCancelRegistration = async (eventId) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-
+  
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/cancel`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-
-      // ✅ Actualizar con callback
-      setUser(prev => ({
-        ...prev,
-        registeredEvents: (prev?.registeredEvents || []).filter(id => id !== eventId)
+  
+      // 🟢 CRÍTICO: Usar callback function
+      setUser(prevUser => ({
+        ...prevUser,
+        registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
       }));
-
-      setEvents(prev =>
-        prev.map(ev =>
+  
+      // 🟢 Actualizar contador
+      setEvents(prevEvents =>
+        prevEvents.map(ev =>
           ev.id === eventId
             ? { ...ev, registered: data.registered }
             : ev
         )
       );
-
+  
       addNotification("Inscripción cancelada correctamente");
     } catch (error) {
       addNotification(error.message, "error");
