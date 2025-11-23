@@ -72,8 +72,14 @@ function App() {
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-    const matchesDate = !selectedDate || event.date === selectedDate;
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      event.category.toLowerCase() === selectedCategory.toLowerCase();
+
+    const matchesDate =
+      !selectedDate ||
+      event.date.slice(0, 10) === selectedDate;
+
     return matchesSearch && matchesCategory && matchesDate;
   });
 
@@ -712,13 +718,19 @@ function App() {
               value={newEvent.description}
               onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
             />
-            <input
-              type="text"
-              placeholder="Categoría"
+            <select
               className="w-full p-3 border rounded-lg"
               value={newEvent.category}
               onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
-            />
+              required
+            >
+              <option value="">Selecciona una categoría</option>
+              <option value="TECNOLOGÍA">TECNOLOGÍA</option>
+              <option value="EDUCACIÓN">EDUCACIÓN</option>
+              <option value="NEGOCIOS">NEGOCIOS</option>
+              <option value="CULTURA">CULTURA</option>
+              <option value="DEPORTES">DEPORTES</option>
+            </select>
             <input
               type="date"
               className={`w-full p-3 border rounded-lg ${!newEvent.date ? "text-gray-400" : "text-gray-900"}`}
@@ -745,7 +757,7 @@ function App() {
               placeholder="Capacidad máxima"
               className="w-full p-3 border rounded-lg"
               value={newEvent.max_capacity}
-              max={user?.role === "user" ? 20 : 5000}   
+              max={user?.role === "user" ? 20 : 5000}
               min={1}
               onChange={(e) => setNewEvent({ ...newEvent, max_capacity: e.target.value })}
             />
