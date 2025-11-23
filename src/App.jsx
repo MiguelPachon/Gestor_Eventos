@@ -216,31 +216,33 @@ function App() {
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
-
+  
     try {
-      // 🟣 Tomar el token guardado al iniciar sesión
       const token = localStorage.getItem("token");
       if (!token) {
         addNotification("Debes iniciar sesión para crear un evento", "error");
         return;
       }
-
+  
       const res = await fetch(`${API_URL}/api/events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 🔒 Enviamos el token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(newEvent),
       });
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) throw new Error(data.message || "Error al crear evento");
-
+  
       addNotification(`Evento "${data.title}" creado con éxito 🎉`, "success");
+  
+      // 🟣 Agrega el nuevo evento al listado
       setEvents(prev => [...prev, data]);
-
+  
+      // 🟣 Limpia el formulario
       setNewEvent({
         title: "",
         description: "",
@@ -250,11 +252,16 @@ function App() {
         max_capacity: "",
         image: "",
       });
+  
+      // 🟣 Regresa a home correctamente
+      setSelectedEvent(null);
       setCurrentView("home");
+  
     } catch (error) {
       addNotification(error.message, "error");
     }
   };
+  
 
 
 
