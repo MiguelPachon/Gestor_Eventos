@@ -1008,6 +1008,7 @@ function App() {
                     />
 
 
+
                     {loginErrors.general && (
                       <p className="text-red-500 text-sm text-center mt-2">
                         {loginErrors.general}
