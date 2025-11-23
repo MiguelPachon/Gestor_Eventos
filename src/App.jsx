@@ -21,6 +21,9 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const [googleKey, setGoogleKey] = useState(Date.now());
+
+
   const navigate = useNavigate();
 
 
@@ -69,9 +72,15 @@ function App() {
     loadEvents();
   }, []);
 
+  const [loadingUser, setLoadingUser] = useState(true);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+
+    if (!token) {
+      setLoadingUser(false);
+      return;
+    }
 
     (async () => {
       const res = await fetch(`${API_URL}/api/auth/me`, {
@@ -84,8 +93,10 @@ function App() {
       } else {
         localStorage.removeItem("token");
       }
+      setLoadingUser(false);
     })();
   }, []);
+
 
 
 
@@ -404,14 +415,16 @@ function App() {
   // LOGOUT (Cerrar Sesión)
   // =======================
   const handleLogout = () => {
-    googleLogout(); 
+    googleLogout();
     localStorage.removeItem("token");
     setUser(null);
     setNotifications([]);
     setHasUnread(false);
     setShowLogoutConfirm(false);
     setCurrentView("home");
+    setGoogleKey(Date.now());
   };
+
 
 
 
@@ -720,6 +733,15 @@ function App() {
   // =======================
   // RENDER PRINCIPAL
   // =======================
+
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700 text-xl">
+        Cargando...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -981,6 +1003,7 @@ function App() {
                     </button>
 
                     <GoogleLogin
+                      key={googleKey}
                       onSuccess={async (credentialResponse) => {
                         const decoded = jwtDecode(credentialResponse.credential);
 
@@ -1001,15 +1024,15 @@ function App() {
                         if (data.token) {
                           localStorage.setItem("token", data.token);
                           setUser(data.user);
-                          navigate('/home'); 
+                          setCurrentView('home');
                         }
-
 
                         addNotification("Sesión iniciada con Google");
                         setShowLoginModal(false);
                       }}
                       onError={() => addNotification("Error al iniciar con Google", "error")}
                     />
+
 
 
 
