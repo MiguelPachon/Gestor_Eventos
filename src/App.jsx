@@ -162,14 +162,6 @@ function App() {
   // LOGIN CON VALIDACIONES
   // ======================
   const handleLogin = async () => {
-    const errors = {};
-
-    if (!loginForm.email) errors.email = "El correo es obligatorio.";
-    if (!loginForm.password) errors.password = "La contraseña es obligatoria.";
-
-    setLoginErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
@@ -178,16 +170,14 @@ function App() {
       });
 
       const data = await res.json();
+      console.log("Login response:", data); // <-- AGRÉGALO
 
       if (!res.ok) {
-
-        setLoginErrors({ general: data.message || "Correo o contraseña incorrectos" });
+        addNotification(data.error || "Error al iniciar sesión", "error");
         return;
       }
 
-
-      if (data.token) localStorage.setItem("token", data.token);
-
+      localStorage.setItem("token", data.token);
 
       const normalizedUser = {
         ...data.user,
@@ -196,17 +186,16 @@ function App() {
       };
 
       setUser(normalizedUser);
-      addNotification("Sesión iniciada correctamente ✅");
+      addNotification("Sesión iniciada correctamente!");
 
       setShowLoginModal(false);
-      setLoginForm({ email: "", password: "" });
-      setLoginErrors({});
+      setTimeout(() => setCurrentView("home"), 10);
     } catch (error) {
-      setLoginErrors({ general: "Error al conectar con el servidor" });
+      console.error(error);
+      addNotification("Error inesperado en login", "error");
     }
-
-
   };
+
 
 
 
@@ -349,32 +338,32 @@ function App() {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     const decoded = jwtDecode(credentialResponse.credential);
-  
+
     const res = await fetch(`${API_URL}/api/auth/google`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ credential: credentialResponse.credential }),
     });
-  
+
     const data = await res.json();
-  
+
     if (data.token) localStorage.setItem("token", data.token);
-  
+
     const normalizedUser = {
       ...data.user,
       registeredEvents: data.user?.registeredEvents || [],
       createdEvents: data.user?.createdEvents || [],
     };
-  
+
     setUser(normalizedUser);
     addNotification("Bienvenido/a con Google!");
-  
+
     setShowLoginModal(false);
     setLoginForm({ email: "", password: "" });
     setLoginErrors({});
     setCurrentView("home");
   };
-  
+
 
 
   const handleCreateEvent = async (e) => {
