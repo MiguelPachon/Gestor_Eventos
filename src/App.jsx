@@ -296,22 +296,22 @@ function App() {
       setShowLoginModal(true);
       return;
     }
-  
+
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/register`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-  
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-  
+
       // Actualizar usuario
       setUser(prevUser => ({
         ...prevUser,
         registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
       }));
-  
+
       // Actualizar eventos
       setEvents(prevEvents =>
         prevEvents.map(ev =>
@@ -320,36 +320,36 @@ function App() {
             : ev
         )
       );
-  
+
       // 🟢 FORZAR RE-RENDER NUCLEAR
       setRefreshKey(prev => prev + 1);
-  
+
       addNotification("Inscripción exitosa ✅");
       addNotification("📧 Te enviaremos un correo de confirmación");
     } catch (error) {
       addNotification(error.message, "error");
     }
   };
-  
+
   const handleCancelRegistration = async (eventId) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-  
+
     try {
       const res = await fetch(`${API_URL}/api/events/${eventId}/cancel`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
-  
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-  
+
       // Actualizar usuario
       setUser(prevUser => ({
         ...prevUser,
         registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
       }));
-  
+
       // Actualizar eventos
       setEvents(prevEvents =>
         prevEvents.map(ev =>
@@ -358,10 +358,10 @@ function App() {
             : ev
         )
       );
-  
+
       // 🟢 FORZAR RE-RENDER NUCLEAR
       setRefreshKey(prev => prev + 1);
-  
+
       addNotification("Inscripción cancelada correctamente");
     } catch (error) {
       addNotification(error.message, "error");
@@ -1040,7 +1040,7 @@ function App() {
                     </div>
 
                     <div className="flex justify-center">
-                    <GoogleLogin
+                      <GoogleLogin
                         key={googleKey}
                         onSuccess={async (credentialResponse) => {
                           try {
@@ -1063,17 +1063,22 @@ function App() {
                             if (data.token) {
                               localStorage.setItem("token", data.token);
 
+                              // 🟢 SOLUCIÓN: Volver a cargar el usuario completo desde /me
+                              const userRes = await fetch(`${API_URL}/api/auth/me`, {
+                                headers: { Authorization: `Bearer ${data.token}` }
+                              });
+
+                              const userData = await userRes.json();
+
                               const normalizedUser = {
-                                ...data.user,
-                                registeredEvents: data.user?.registeredEvents || [],
-                                createdEvents: data.user?.createdEvents || [],
+                                ...userData.user,
+                                registeredEvents: userData.user?.registeredEvents || [],
+                                createdEvents: userData.user?.createdEvents || [],
                               };
 
                               setUser(normalizedUser);
-                              
-                              
                               setRefreshKey(prev => prev + 1);
-                              
+
                               setShowLoginModal(false);
                               setCurrentView('home');
                               addNotification("Sesión iniciada con Google ✅");
