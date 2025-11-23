@@ -329,7 +329,7 @@ function App() {
         setEvents(prevEvents =>
           prevEvents.map(ev =>
             ev.id === eventId
-              ? { ...ev, registered: (ev.registered ?? 1) - 1 }
+              ? { ...ev, registered: Math.max((ev.registered ?? 1) - 1, 0) }
               : ev
           )
         );
@@ -337,14 +337,7 @@ function App() {
         throw new Error(data.message);
       }
   
-      
-      setEvents(prevEvents =>
-        prevEvents.map(ev =>
-          ev.id === eventId
-            ? { ...ev, registered: data.registered }
-            : ev
-        )
-      );
+   
   
       addNotification("Inscripción exitosa! ✅");
       addNotification("📧 Te enviaremos un correo de confirmación ");
@@ -357,7 +350,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (!token) return;
   
-   
+    
     setUser(prevUser => ({
       ...prevUser,
       registeredEvents: (prevUser?.registeredEvents || []).filter(id => id !== eventId)
@@ -380,7 +373,7 @@ function App() {
       const data = await res.json();
       
       if (!res.ok) {
-        
+      
         setUser(prevUser => ({
           ...prevUser,
           registeredEvents: [...(prevUser?.registeredEvents || []), eventId]
@@ -398,13 +391,6 @@ function App() {
       }
   
       
-      setEvents(prevEvents =>
-        prevEvents.map(ev =>
-          ev.id === eventId
-            ? { ...ev, registered: data.registered }
-            : ev
-        )
-      );
   
       addNotification("Inscripción cancelada correctamente");
     } catch (error) {
