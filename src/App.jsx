@@ -1037,7 +1037,7 @@ function App() {
                     </div>
 
                     <div className="flex justify-center">
-                      <GoogleLogin
+                    <GoogleLogin
                         key={googleKey}
                         onSuccess={async (credentialResponse) => {
                           try {
@@ -1060,7 +1060,6 @@ function App() {
                             if (data.token) {
                               localStorage.setItem("token", data.token);
 
-
                               const normalizedUser = {
                                 ...data.user,
                                 registeredEvents: data.user?.registeredEvents || [],
@@ -1068,6 +1067,10 @@ function App() {
                               };
 
                               setUser(normalizedUser);
+                              
+                              
+                              setRefreshKey(prev => prev + 1);
+                              
                               setShowLoginModal(false);
                               setCurrentView('home');
                               addNotification("Sesión iniciada con Google ✅");
