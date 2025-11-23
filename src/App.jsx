@@ -342,6 +342,12 @@ function App() {
 
       setEvents(prev => [...prev, data.event]);
 
+      setUser(prev => ({
+        ...prev,
+        createdEvents: [...(prev.createdEvents || []), data.event.id]
+      }));
+
+
 
       //  Limpia el formulario
       setNewEvent({
@@ -495,9 +501,12 @@ function App() {
   // =======================
   const ProfileView = () => {
     const userEvents = events.filter(e => user?.registeredEvents.includes(e.id));
+    const createdEvents = events.filter(e => user?.createdEvents?.includes(e.id));
 
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        {/* PERFIL */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center text-white text-3xl font-bold">
@@ -513,55 +522,10 @@ function App() {
           </div>
         </div>
 
+        {/* ================================
+              MIS EVENTOS INSCRITOS
+        ================================= */}
         <h3 className="text-2xl font-bold text-gray-900 mb-6">Mis Eventos Inscritos</h3>
-        {/* ===========================
-              MIS EVENTOS CREADOS
-            =========================== */}
-        <h3 className="text-2xl font-bold text-gray-900 mt-12 mb-6">Mis Eventos Creados</h3>
-
-        {events.filter(e => user?.createdEvents?.includes(e.id)).length === 0 ? (
-          <div className="bg-white rounded-xl shadow p-12 text-center">
-            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">No has creado ningún evento aún</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events
-              .filter(e => user?.createdEvents?.includes(e.id))
-              .map(event => (
-                <div key={event.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
-                  <img src={event.image} alt={event.title} className="w-full h-40 object-cover" />
-
-                  <div className="p-6">
-                    <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
-                      {event.category}
-                    </span>
-
-                    <h4 className="text-lg font-bold text-gray-900 mt-3 mb-2">{event.title}</h4>
-
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {new Date(event.date).toLocaleDateString('es-ES')}
-                    </div>
-
-                    <div className="flex items-center text-sm text-gray-600 mb-4">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {event.location}
-                    </div>
-
-                    {/* BOTÓN ELIMINAR*/}
-                    <button
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition"
-                    >
-                      Eliminar Evento
-                    </button>
-                  </div>
-                </div>
-              ))}
-          </div>
-        )}
-
 
         {userEvents.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-12 text-center">
@@ -604,9 +568,57 @@ function App() {
             ))}
           </div>
         )}
+
+        {/* ================================
+              MIS EVENTOS CREADOS
+        ================================= */}
+        <h3 className="text-2xl font-bold text-gray-900 mt-12 mb-6">Mis Eventos Creados</h3>
+
+        {createdEvents.length === 0 ? (
+          <div className="bg-white rounded-xl shadow p-12 text-center">
+            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No has creado ningún evento aún</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {createdEvents.map(event => (
+              <div key={event.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                <img src={event.image} alt={event.title} className="w-full h-40 object-cover" />
+
+                <div className="p-6">
+                  <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                    {event.category}
+                  </span>
+
+                  <h4 className="text-lg font-bold text-gray-900 mt-3 mb-2">{event.title}</h4>
+
+                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {new Date(event.date).toLocaleDateString('es-ES')}
+                  </div>
+
+                  <div className="flex items-center text-sm text-gray-600 mb-4">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {event.location}
+                  </div>
+
+                  {/* BOTÓN ELIMINAR */}
+                  <button
+                    onClick={() => handleDeleteEvent(event.id)}
+                    className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition"
+                  >
+                    Eliminar Evento
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     );
   };
+
 
   // =======================
   // DETALLE DEL EVENTO
