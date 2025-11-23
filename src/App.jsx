@@ -136,6 +136,9 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
+  const isUserRegisteredToEvent = useCallback((eventId) => {
+    return user?.registeredEvents?.includes(eventId) || false;
+  }, [user?.registeredEvents]);
 
   const addNotification = (message, type = 'info') => {
     setNotifications(prev => [
@@ -692,7 +695,7 @@ function App() {
   // =======================
   const EventDetailView = () => {
     if (!selectedEvent) return null;
-    const isRegistered = user?.registeredEvents.includes(selectedEvent.id);
+    const isRegistered = isUserRegisteredToEvent(selectedEvent.id);
 
     return (
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -846,7 +849,7 @@ function App() {
                       </div>
                     </div>
 
-                    {user?.registeredEvents.includes(event.id) ? (
+                    {isUserRegisteredToEvent(event.id) ? (
                       <button
                         onClick={() => handleCancelRegistration(event.id)}
                         className="w-full bg-red-100 text-red-600 py-3 rounded-lg font-semibold hover:bg-red-200 transition"
