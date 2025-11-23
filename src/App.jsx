@@ -1002,12 +1002,6 @@ function App() {
                     >
                       Iniciar Sesión
                     </button>
-                    <button
-                      onClick={handleLogin}
-                      className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
-                    >
-                      Iniciar Sesión
-                    </button>
 
                     {loginErrors.general && (
                       <p className="text-red-500 text-sm text-center mt-2">
