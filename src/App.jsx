@@ -216,14 +216,14 @@ function App() {
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
-  
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         addNotification("Debes iniciar sesión para crear un evento", "error");
         return;
       }
-  
+
       const res = await fetch(`${API_URL}/api/events`, {
         method: "POST",
         headers: {
@@ -232,16 +232,16 @@ function App() {
         },
         body: JSON.stringify(newEvent),
       });
-  
+
       const data = await res.json();
-  
+
       if (!res.ok) throw new Error(data.message || "Error al crear evento");
-  
+
       addNotification(`Evento "${data.title}" creado con éxito 🎉`, "success");
-  
+
       // 🟣 Agrega el nuevo evento al listado
       setEvents(prev => [...prev, data]);
-  
+
       // 🟣 Limpia el formulario
       setNewEvent({
         title: "",
@@ -252,16 +252,16 @@ function App() {
         max_capacity: "",
         image: "",
       });
-  
+
       // 🟣 Regresa a home correctamente
       setSelectedEvent(null);
       setCurrentView("home");
-  
+
     } catch (error) {
       addNotification(error.message, "error");
     }
   };
-  
+
 
 
 
@@ -585,7 +585,7 @@ function App() {
                       </span>
                       <div className="flex items-center text-sm text-gray-600">
                         <Users className="w-4 h-4 mr-1" />
-                        {event.registered}/{event.maxCapacity}
+                        {(event.registered ?? 0)}/{event.max_capacity}
                       </div>
                     </div>
 
