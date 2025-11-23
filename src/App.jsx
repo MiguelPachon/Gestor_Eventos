@@ -1053,7 +1053,7 @@ function App() {
                               setCurrentView('home');
                               addNotification("Sesión iniciada con Google ✅");
                               
-                              
+                              // Forzar actualización de la UI
                               window.history.pushState({}, '', '/');
                             }
                           } catch (error) {
