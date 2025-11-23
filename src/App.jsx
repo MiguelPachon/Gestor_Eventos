@@ -814,7 +814,7 @@ function App() {
               <p className="text-gray-600">{filteredEvents.length} eventos encontrados</p>
             </div>
 
-            <div key={refreshKey} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredEvents.map(event => (
                 <div key={event.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
                   <img src={event.image} alt={event.title} className="w-full h-48 object-cover" />
@@ -1075,7 +1075,6 @@ function App() {
                               };
 
                               setUser(normalizedUser);
-                              setRefreshKey(prev => prev + 1);
 
                               setShowLoginModal(false);
                               setCurrentView('home');
