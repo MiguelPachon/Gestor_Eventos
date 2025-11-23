@@ -1042,7 +1042,7 @@ function App() {
                             if (data.token) {
                               localStorage.setItem("token", data.token);
                               
-                              // 🟢 Normalizar datos correctamente
+                              
                               const normalizedUser = {
                                 ...data.user,
                                 registeredEvents: data.user?.registeredEvents || [],
