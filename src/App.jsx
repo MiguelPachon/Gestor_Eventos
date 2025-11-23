@@ -204,6 +204,8 @@ function App() {
     } catch (error) {
       setLoginErrors({ general: "Error al conectar con el servidor" });
     }
+
+
   };
 
 
@@ -344,6 +346,35 @@ function App() {
       addNotification(error.message, "error");
     }
   };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const decoded = jwtDecode(credentialResponse.credential);
+  
+    const res = await fetch(`${API_URL}/api/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential: credentialResponse.credential }),
+    });
+  
+    const data = await res.json();
+  
+    if (data.token) localStorage.setItem("token", data.token);
+  
+    const normalizedUser = {
+      ...data.user,
+      registeredEvents: data.user?.registeredEvents || [],
+      createdEvents: data.user?.createdEvents || [],
+    };
+  
+    setUser(normalizedUser);
+    addNotification("Bienvenido/a con Google!");
+  
+    setShowLoginModal(false);
+    setLoginForm({ email: "", password: "" });
+    setLoginErrors({});
+    setCurrentView("home");
+  };
+  
 
 
   const handleCreateEvent = async (e) => {
@@ -939,244 +970,132 @@ function App() {
           MODAL LOGIN / REGISTRO
       =========================== */}
       {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {isRegisterMode ? 'Crear Cuenta' : 'Iniciar Sesión'}
-                </h2>
-                <button onClick={() => setShowLoginModal(false)} className="text-gray-500 hover:text-gray-700">
-                  <X className="w-6 h-6" />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md relative">
+
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h2 className="text-2xl font-bold text-center mb-6">
+              {isRegisterMode ? "Crear Cuenta" : "Iniciar Sesión"}
+            </h2>
+
+            {/* LOGIN FORM */}
+            {!isRegisterMode && (
+              <>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  className="w-full p-3 border rounded-lg mb-3"
+                  value={loginForm.email}
+                  onChange={(e) =>
+                    setLoginForm({ ...loginForm, email: e.target.value })
+                  }
+                />
+
+                <div className="relative mb-3">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Contraseña"
+                    className="w-full p-3 border rounded-lg"
+                    value={loginForm.password}
+                    onChange={(e) =>
+                      setLoginForm({ ...loginForm, password: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-3 text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
+
+                {loginErrors.general && (
+                  <p className="text-red-600 text-center mb-2">
+                    {loginErrors.general}
+                  </p>
+                )}
+
+                <button
+                  onClick={handleLogin}
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition mb-4"
+                >
+                  Iniciar Sesión
                 </button>
-              </div>
 
-              {!isRegisterMode ? (
-                // ======================
-                // LOGIN
-                // ======================
-                <>
-                  <div className="space-y-4">
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        placeholder="tucorreo@ejemplo.com"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${loginErrors.email ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                      />
-                      {loginErrors.email && <p className="text-red-500 text-sm mt-1">{loginErrors.email}</p>}
-                    </div>
+                {/* GOOGLE LOGIN */}
+                <GoogleLogin
+                  key={googleKey}
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => console.log("Error en Google Login")}
+                  useOneTap={false}
+                />
+              </>
+            )}
 
-                    {/* Contraseña */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${loginErrors.password ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                          value={loginForm.password}
-                          onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                        >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                      {loginErrors.password && <p className="text-red-500 text-sm mt-1">{loginErrors.password}</p>}
-                    </div>
+            {/* REGISTRO */}
+            {isRegisterMode && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Nombre"
+                  className="w-full p-3 border rounded-lg mb-3"
+                  value={registerForm.name}
+                  onChange={(e) =>
+                    setRegisterForm({ ...registerForm, name: e.target.value })
+                  }
+                />
 
-                    <button
-                      onClick={handleLogin}
-                      className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
-                    >
-                      Iniciar Sesión
-                    </button>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  className="w-full p-3 border rounded-lg mb-3"
+                  value={registerForm.email}
+                  onChange={(e) =>
+                    setRegisterForm({ ...registerForm, email: e.target.value })
+                  }
+                />
 
-                    <GoogleLogin
-                      key={googleKey}
-                      onSuccess={async (credentialResponse) => {
-                        const decoded = jwtDecode(credentialResponse.credential);
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  className="w-full p-3 border rounded-lg mb-3"
+                  value={registerForm.password}
+                  onChange={(e) =>
+                    setRegisterForm({ ...registerForm, password: e.target.value })
+                  }
+                />
 
-                        const googleUser = {
-                          name: decoded.name,
-                          email: decoded.email,
-                          googleId: decoded.sub,
-                        };
+                <button
+                  onClick={handleRegister}
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
+                >
+                  Registrarse
+                </button>
+              </>
+            )}
 
-                        const res = await fetch(`${API_URL}/api/auth/google-login`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(googleUser),
-                        });
-
-                        const data = await res.json();
-
-                        if (data.token) {
-                          localStorage.setItem("token", data.token);
-                          setUser(data.user);
-                          setCurrentView('home');
-                        }
-
-                        addNotification("Sesión iniciada con Google");
-                        setShowLoginModal(false);
-                      }}
-                      onError={() => addNotification("Error al iniciar con Google", "error")}
-                    />
-
-
-
-
-                    {loginErrors.general && (
-                      <p className="text-red-500 text-sm text-center mt-2">
-                        {loginErrors.general}
-                      </p>
-                    )}
-
-
-                    <p className="text-center text-sm text-gray-600 mt-4">
-                      ¿No tienes cuenta?{' '}
-                      <button
-                        onClick={() => setIsRegisterMode(true)}
-                        className="text-purple-600 font-semibold hover:underline"
-                      >
-                        Regístrate
-                      </button>
-                    </p>
-                  </div>
-                </>
-              ) : (
-                // ======================
-                // REGISTRO
-                // ======================
-                <>
-                  <div className="space-y-4">
-                    {/* Nombre */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nombre completo</label>
-                      <input
-                        type="text"
-                        placeholder="Tu nombre"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.name ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        value={registerForm.name}
-                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                      />
-                      {registerErrors.name && <p className="text-red-500 text-sm mt-1">{registerErrors.name}</p>}
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        placeholder="tucorreo@ejemplo.com"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.email ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        value={registerForm.email}
-                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                      />
-                      {registerErrors.email && <p className="text-red-500 text-sm mt-1">{registerErrors.email}</p>}
-                    </div>
-
-                    {/* Contraseña */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-                      <input
-                        type="password"
-                        placeholder="Mínimo 8 caracteres"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none ${registerErrors.password ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        value={registerForm.password}
-                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                      />
-                      {registerErrors.password && (
-                        <p className="text-red-500 text-sm mt-1">{registerErrors.password}</p>
-                      )}
-                    </div>
-
-                    {/* Rol */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
-                      <select
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
-                        value={registerForm.role}
-                        onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}
-                      >
-                        <option value="user">Usuario</option>
-                        <option value="organizer">Organizador</option>
-                      </select>
-                    </div>
-
-                    {/* Campos adicionales solo si organizador */}
-                    {registerForm.role === 'organizer' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">NIT</label>
-                          <input
-                            type="text"
-                            placeholder="Número de NIT"
-                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
-                            value={registerForm.nit}
-                            onChange={(e) => setRegisterForm({ ...registerForm, nit: e.target.value })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                          <input
-                            type="text"
-                            placeholder="Teléfono de contacto"
-                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
-                            value={registerForm.phone}
-                            onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Documento</label>
-                          <input
-                            type="text"
-                            placeholder="Documento o identificación"
-                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none border-gray-300"
-                            value={registerForm.document}
-                            onChange={(e) => setRegisterForm({ ...registerForm, document: e.target.value })}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <button
-                      onClick={handleRegister}
-                      className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
-                    >
-                      Crear Cuenta
-                    </button>
-
-                    <p className="text-center text-sm text-gray-600 mt-4">
-                      ¿Ya tienes cuenta?{' '}
-                      <button
-                        onClick={() => setIsRegisterMode(false)}
-                        className="text-purple-600 font-semibold hover:underline"
-                      >
-                        Inicia sesión
-                      </button>
-                    </p>
-                  </div>
-                </>
-              )}
+            <div className="mt-4 text-center">
+              <button
+                className="text-purple-600 font-semibold"
+                onClick={() => setIsRegisterMode(!isRegisterMode)}
+              >
+                {isRegisterMode
+                  ? "¿Ya tienes cuenta? Inicia sesión"
+                  : "¿No tienes cuenta? Regístrate"}
+              </button>
             </div>
           </div>
         </div>
       )}
+
 
       {/* ===========================
           CONFIRMACIÓN LOGOUT
