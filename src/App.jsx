@@ -200,6 +200,7 @@ function App() {
       addNotification("Sesión iniciada correctamente ✅");
 
       setShowLoginModal(false);
+      setCurrentView("home");
       setLoginForm({ email: "", password: "" });
       setLoginErrors({});
     } catch (error) {
