@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } from 'lucide-react';
 import API_URL from "./config";
+import { useAuth0 } from "@auth0/auth0-react";
 
 
 
@@ -17,6 +18,9 @@ function App() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  const { loginWithRedirect, logout, isAuthenticated, user: auth0User } = useAuth0();
+
 
   const handleDeleteEvent = async (eventId) => {
     const token = localStorage.getItem("token");
@@ -62,6 +66,20 @@ function App() {
 
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && auth0User) {
+      setUser({
+        name: auth0User.name,
+        email: auth0User.email,
+        picture: auth0User.picture,
+        role: "user",
+        registeredEvents: [],
+        createdEvents: []
+      });
+    }
+  }, [isAuthenticated, auth0User]);
+
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -383,7 +401,12 @@ function App() {
     setHasUnread(false);
     setShowLogoutConfirm(false);
     setCurrentView("home");
+
+    try {
+      logout({ logoutParams: { returnTo: window.location.origin } });
+    } catch { }
   };
+
 
 
 
@@ -404,6 +427,7 @@ function App() {
           </div>
           <h1 className="text-white text-2xl font-bold">EventHub</h1>
         </div>
+
 
         {/* Menú derecho */}
         <div className="flex items-center gap-4 relative">
@@ -472,11 +496,20 @@ function App() {
               >
                 Iniciar
               </button>
+
               <button
                 onClick={() => { setShowLoginModal(true); setIsRegisterMode(true); }}
                 className="bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition"
               >
                 Registro
+              </button>
+
+              {/* 🔥 BOTÓN GOOGLE LOGIN */}
+              <button
+                onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
+                className="bg-red-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600 transition"
+              >
+                Google
               </button>
             </>
           ) : (
@@ -487,9 +520,8 @@ function App() {
             >
               <LogOut className="w-5 h-5" />
             </button>
-
-
           )}
+
         </div>
       </div>
     </header>
@@ -944,6 +976,13 @@ function App() {
                     >
                       Iniciar Sesión
                     </button>
+                    <button
+                      onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
+                      className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition"
+                    >
+                      Iniciar sesión con Google
+                    </button>
+
                     {loginErrors.general && (
                       <p className="text-red-500 text-sm text-center mt-2">
                         {loginErrors.general}
