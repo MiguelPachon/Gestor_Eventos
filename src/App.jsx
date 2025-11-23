@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } from 'lucide-react';
 import API_URL from "./config";
-import { useAuth0 } from "@auth0/auth0-react";
+import { GoogleLogin } from "@react-oauth/google";
+import jwtDecode from "jwt-decode";
+
 
 
 
@@ -19,7 +21,6 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const { loginWithRedirect, logout, isAuthenticated, user: auth0User } = useAuth0();
 
 
   const handleDeleteEvent = async (eventId) => {
@@ -68,17 +69,24 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && auth0User) {
-      setUser({
-        name: auth0User.name,
-        email: auth0User.email,
-        picture: auth0User.picture,
-        role: "user",
-        registeredEvents: [],
-        createdEvents: []
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    (async () => {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-    }
-  }, [isAuthenticated, auth0User]);
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        localStorage.removeItem("token");
+      }
+    })();
+  }, []);
+
+
 
 
   const [newEvent, setNewEvent] = useState({
@@ -401,11 +409,8 @@ function App() {
     setHasUnread(false);
     setShowLogoutConfirm(false);
     setCurrentView("home");
-
-    try {
-      logout({ logoutParams: { returnTo: window.location.origin } });
-    } catch { }
   };
+
 
 
 
@@ -476,6 +481,7 @@ function App() {
 
 
 
+
               {/* Botón perfil */}
               <button
                 onClick={() => setCurrentView('profile')}
@@ -504,13 +510,7 @@ function App() {
                 Registro
               </button>
 
-              {/* 🔥 BOTÓN GOOGLE LOGIN */}
-              <button
-                onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
-                className="bg-red-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600 transition"
-              >
-                Google
-              </button>
+
             </>
           ) : (
             <button
@@ -976,12 +976,36 @@ function App() {
                     >
                       Iniciar Sesión
                     </button>
-                    <button
-                      onClick={() => loginWithRedirect({ connection: "google-oauth2" })}
-                      className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition"
-                    >
-                      Iniciar sesión con Google
-                    </button>
+
+                    <GoogleLogin
+                      onSuccess={async (credentialResponse) => {
+                        const decoded = jwtDecode(credentialResponse.credential);
+
+                        const googleUser = {
+                          name: decoded.name,
+                          email: decoded.email,
+                          googleId: decoded.sub,
+                        };
+
+                        const res = await fetch(`${API_URL}/api/auth/google-login`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(googleUser),
+                        });
+
+                        const data = await res.json();
+
+                        if (data.token) {
+                          localStorage.setItem("token", data.token);
+                          setUser(data.user);
+                        }
+
+                        addNotification("Sesión iniciada con Google");
+                        setShowLoginModal(false);
+                      }}
+                      onError={() => addNotification("Error al iniciar con Google", "error")}
+                    />
+
 
                     {loginErrors.general && (
                       <p className="text-red-500 text-sm text-center mt-2">
