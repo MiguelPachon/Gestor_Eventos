@@ -1,51 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } from 'lucide-react';
 import API_URL from "./config";
 
 
-// =======================
-// Datos simulados
-// =======================
-const mockEvents = [
-  {
-    id: 1,
-    title: "Tech Summit 2025",
-    category: "TECNOLOGÍA",
-    description: "Conferencia anual sobre tecnologías emergentes: AI, ML Web3 y más.",
-    date: "2025-11-15",
-    location: "Centro de Convenciones",
-    maxCapacity: 200,
-    registered: 45,
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=250&fit=crop"
-  },
-  {
-    id: 2,
-    title: "Educación del Futuro",
-    category: "EDUCACIÓN",
-    description: "Encuentro para docentes y profesionales, con talleres prácticos sobre metodologías activas",
-    date: "2025-11-20",
-    location: "Universidad Central",
-    maxCapacity: 150,
-    registered: 78,
-    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=250&fit=crop"
-  },
-  {
-    id: 3,
-    title: "Foro de Negocios & Startups",
-    category: "NEGOCIOS",
-    description: "Paneles de inversionistas, pitch de startups y mesas redondas con líderes del ecosistema",
-    date: "2025-11-25",
-    location: "Hotel Empresarial",
-    maxCapacity: 100,
-    registered: 92,
-    image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400&h=250&fit=crop"
-  }
-];
+
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
   const [user, setUser] = useState(null);
-  const [events] = useState(mockEvents);
+  const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
@@ -54,6 +17,24 @@ function App() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/events`);
+        const data = await res.json();
+
+        if (!res.ok)
+          throw new Error(data.message || "Error al cargar eventos");
+
+        setEvents(data);
+      } catch (error) {
+        console.error("Error cargando eventos:", error);
+      }
+    };
+
+    loadEvents();
+  }, []);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -258,6 +239,8 @@ function App() {
       if (!res.ok) throw new Error(data.message || "Error al crear evento");
 
       addNotification(`Evento "${data.title}" creado con éxito 🎉`, "success");
+      setEvents(prev => [...prev, data]);
+
       setNewEvent({
         title: "",
         description: "",
