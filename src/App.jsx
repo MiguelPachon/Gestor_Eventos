@@ -70,16 +70,22 @@ function App() {
 
   const categories = ['all', 'TECNOLOGÍA', 'EDUCACIÓN', 'NEGOCIOS', 'CULTURA', 'DEPORTES'];
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch =
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description.toLowerCase().includes(searchTerm.toLowerCase());
+  
     const matchesCategory =
       selectedCategory === 'all' ||
       event.category.toLowerCase() === selectedCategory.toLowerCase();
-
+  
+    // Normalizar fecha del evento YYYY-MM-DD
+    const eventDate = new Date(event.date);
+    const eventDateString = eventDate.toISOString().slice(0, 10);
+  
     const matchesDate =
       !selectedDate ||
-      event.date.slice(0, 10) === selectedDate;
-
+      eventDateString === selectedDate;
+  
     return matchesSearch && matchesCategory && matchesDate;
   });
 
