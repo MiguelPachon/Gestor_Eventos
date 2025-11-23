@@ -3,6 +3,9 @@ import { Calendar, MapPin, Users, Search, LogOut, User, X, Eye, EyeOff, Bell } f
 import API_URL from "./config";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import { GoogleLogin, googleLogout } from "@react-oauth/google";
+import { useNavigate } from 'react-router-dom';
+
 
 
 
@@ -22,6 +25,7 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const navigate = useNavigate();
 
 
   const handleDeleteEvent = async (eventId) => {
@@ -404,6 +408,7 @@ function App() {
   // LOGOUT (Cerrar Sesión)
   // =======================
   const handleLogout = () => {
+    googleLogout(); 
     localStorage.removeItem("token");
     setUser(null);
     setNotifications([]);
@@ -411,6 +416,7 @@ function App() {
     setShowLogoutConfirm(false);
     setCurrentView("home");
   };
+  
 
 
 
@@ -999,7 +1005,9 @@ function App() {
                         if (data.token) {
                           localStorage.setItem("token", data.token);
                           setUser(data.user);
+                          navigate('/home'); 
                         }
+                        
 
                         addNotification("Sesión iniciada con Google");
                         setShowLoginModal(false);
